@@ -1,0 +1,24 @@
+# Arquivo de segredos
+.env
+
+# Dependências do Composer
+/vendor/
+
+# Logs
+/storage/logs/*.log
+!/storage/logs/.keep
+
+# Arquivos temporários de upload
+/storage/uploads_queue/
+!/storage/uploads_queue/.keep
+
+# Mídia processada (vídeos, HLS, PDFs)
+/media_protected/
+!/media_protected/.keep
+
+# Cache e outros arquivos de storage
+/storage/cache/
+!/storage/cache/.keep
+
+/storage/backups/
+!/storage/backups/.keep
