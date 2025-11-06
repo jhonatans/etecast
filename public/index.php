@@ -1,6 +1,4 @@
 <?php
-// public/index.php (CORRIGIDO)
-
 // 1. Carrega o Autoloader do Composer (ESSENCIAL)
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -11,7 +9,7 @@ $envFile = __DIR__ . '/../.env';
 if (file_exists($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue; // Ignora comentários
+        if (strpos(trim($line), '#') === 0) continue;
         
         list($key, $value) = explode('=', $line, 2);
         $key = trim($key);
@@ -94,15 +92,21 @@ $router->get('/admin/content/upload-status/{job_id}', function($job_id) use ($co
 // Rotas de Conteúdo e Streaming de Aluno (Injetando $pdo)
 // --------------------------------------------------------------------------
 $mediaController = new MediaController($pdo);
-// (Precisamos criar o StudentController)
-// $studentController = new StudentController($pdo); 
+$studentController = new StudentController($pdo); // <-- AGORA ESTÁ ATIVO
 
 // Rota principal (Home/Catálogo)
-$router->get('/', function() {
-    if (!isset($_SESSION['student_id'])) {
-        header('Location: ' . BASE_URL . '/login'); exit;
-    }
-    echo '<h1>Bem-vindo ao ETECast! (Catálogo)</h1> <a href="/logout">Sair</a>';
+$router->get('/', function() use ($studentController) {
+    $studentController->catalog(); // <-- AGORA CHAMA O CONTROLLER
+});
+
+// Rota para exibir o player (vídeo, podcast, PDF)
+$router->get('/content/view/(\d+)', function($contentId) use ($studentController) {
+    $studentController->viewContent($contentId); // <-- ROTA ATUALIZADA
+});
+
+// Rota de streaming de mídia (protegida por token)
+$router->get('/stream/(\d+)/(.+)', function($contentId, $filePath) use ($mediaController) {
+    $mediaController->serve($contentId, $filePath, $_GET['t'] ?? null);
 });
 
 // Rota para exibir o player (vídeo, podcast, PDF)

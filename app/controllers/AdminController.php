@@ -20,5 +20,4 @@ class AdminController {
         echo '<br><a href="/admin/logout">Sair</a>';
     }
 
-    // (Outros métodos: listStudents, addStudent, etc. virão aqui)
 }

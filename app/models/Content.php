@@ -24,4 +24,18 @@ class Content {
         $stmt->execute([$tipo, $titulo, $descricao, $arquivo, $hlsManifest, $criadoPor]);
         return $this->pdo->lastInsertId();
     }
+
+    /**
+     * Busca todos os conteúdos visíveis, ordenados pelos mais recentes.
+     * @return array
+     */
+    public function findAllVisible() {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM contents WHERE visivel = 1 ORDER BY criado_em DESC'
+        );
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    
 }

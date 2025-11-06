@@ -17,10 +17,9 @@ class AuthController {
     public function showLogin() {
         $error = $_SESSION['error'] ?? null;
         unset($_SESSION['error']);
-        // Precisaremos criar esta view em breve
-        // require __DIR__ . '/../views/student/login.php';
-        echo '<h1>Login Aluno</h1><form method="POST"><input name="matricula" placeholder="Matrícula"><input name="data_nascimento" placeholder="DD/MM/AAAA (1 Acesso)" type="text"><input name="password" placeholder="Senha (2 Acesso)" type="password"><button>Entrar</button></form>';
-        if($error) echo "<p style='color:red;'>$error</p>";
+        require __DIR__ . '/../views/student/login.php';
+        //echo '<h1>Login Aluno</h1><form method="POST"><input name="matricula" placeholder="Matrícula"><input name="data_nascimento" placeholder="DD/MM/AAAA (1 Acesso)" type="text"><input name="password" placeholder="Senha (2 Acesso)" type="password"><button>Entrar</button></form>';
+        // if($error) echo "<p style='color:red;'>$error</p>";
     }
 
     // Processa o login
@@ -82,9 +81,8 @@ class AuthController {
         if (!isset($_SESSION['temp_student_id'])) {
              header('Location: ' . BASE_URL . '/login'); exit;
         }
-        // Precisaremos criar esta view em breve
-        // require __DIR__ . '/../views/student/register_password.php';
-        echo '<h1>Criar Senha (Primeiro Acesso)</h1><form method="POST"><input name="password" placeholder="Nova Senha (min 8 caracteres)" type="password"><input name="password_confirm" placeholder="Confirmar Senha" type="password"><button>Salvar Senha</button></form>';
+        require __DIR__ . '/../views/student/register_password.php';
+        //echo '<h1>Criar Senha (Primeiro Acesso)</h1><form method="POST"><input name="password" placeholder="Nova Senha (min 8 caracteres)" type="password"><input name="password_confirm" placeholder="Confirmar Senha" type="password"><button>Salvar Senha</button></form>';
     }
 
     // Salva a nova senha

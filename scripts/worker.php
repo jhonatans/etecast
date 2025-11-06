@@ -49,8 +49,9 @@ while (true) {
             echo "[" . date('Y-m-d H:i:s') . "] Processing job ID: " . $job['id'] . "\n";
 
             // Atualiza o status para 'processing'
-            $updateStmt = $pdo->prepare("UPDATE queue_jobs SET status = 'processing', started_at = NOW() WHERE id = ?");
-            $updateStmt->execute([$job['id']]);
+            $truncatedLog = substr($jobLog, 0, 16000);
+            $updateStmt = $pdo->prepare("UPDATE queue_jobs SET status = 'failed', finished_at = NOW(), log = ? WHERE id = ?");
+            $updateStmt->execute([$truncatedLog, $job['id']]);
 
             // Decidir a ação com base no tipo de trabalho
             switch ($job['job_type']) {
