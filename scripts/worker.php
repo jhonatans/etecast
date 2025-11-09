@@ -1,26 +1,35 @@
 <?php
 
 require __DIR__ . '/../vendor/autoload.php';
-// $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..'); // Aponta para a raiz /etecast
-// $dotenv->load();
-$envFile = __DIR__ . '/../.env';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue; // Ignora comentários
+// use Dotenv\Dotenv;
+// Carrega as variáveis de ambiente do .env
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..'); // Aponta para a raiz /etecast
+$dotenv->load();
+
+// echo "=== DEBUG .env ===\n";
+// echo "DB_HOST: " . ($_ENV['DB_HOST'] ?? 'NÃO ENCONTRADO') . "\n";
+// echo "DB_DATABASE: " . ($_ENV['DB_DATABASE'] ?? 'NÃO ENCONTRADO') . "\n";
+// echo "DB_USERNAME: " . ($_ENV['DB_USERNAME'] ?? 'NÃO ENCONTRADO') . "\n";
+// echo "DB_PASSWORD: " . ($_ENV['DB_PASSWORD'] ?? 'NÃO ENCONTRADO') . "\n";
+// echo "==================\n";
+// $envFile = __DIR__ . '/../.env';
+// if (file_exists($envFile)) {
+//     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+//     foreach ($lines as $line) {
+//         if (strpos(trim($line), '#') === 0) continue; // Ignora comentários
         
-        list($key, $value) = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value);
+//         list($key, $value) = explode('=', $line, 2);
+//         $key = trim($key);
+//         $value = trim($value);
         
-        // Remove aspas se existirem
-        $value = trim($value, '"\'');
+//         // Remove aspas se existirem
+//         $value = trim($value, '"\'');
         
-        putenv("$key=$value");
-        $_ENV[$key] = $value;
-        $_SERVER[$key] = $value;
-    }
-}
+//         putenv("$key=$value");
+//         $_ENV[$key] = $value;
+//         $_SERVER[$key] = $value;
+//     }
+// }
 require __DIR__ . '/../config/app.php';
 require __DIR__ . '/../config/database.php';
 
@@ -47,6 +56,7 @@ while (true) {
         if ($job) {
             $processedJobs++;
             echo "[" . date('Y-m-d H:i:s') . "] Processing job ID: " . $job['id'] . "\n";
+            $jobLog = $jobLog ?? '';
 
             // Atualiza o status para 'processing'
             $truncatedLog = substr($jobLog, 0, 16000);

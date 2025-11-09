@@ -1,10 +1,18 @@
 <?php
 
+// $config = [
+//     'host' => getenv('DB_HOST') ?: 'localhost',
+//     'database' => getenv('DB_DATABASE') ?: 'etecast', 
+//     'username' => getenv('DB_USERNAME') ?: 'etecast_user', 
+//     'password' => getenv('DB_PASSWORD') ?: '', 
+//     'charset' => 'utf8mb4'
+// ];
+
 $config = [
-    'host' => getenv('DB_HOST') ?: 'localhost',
-    'database' => getenv('DB_DATABASE') ?: 'etecast', 
-    'username' => getenv('DB_USERNAME') ?: 'etecast_user', 
-    'password' => getenv('DB_PASSWORD') ?: '', 
+    'host' => $_ENV['DB_HOST'] ?? 'localhost',           
+    'database' => $_ENV['DB_DATABASE'] ?? 'etecast',     
+    'username' => $_ENV['DB_USERNAME'] ?? 'etecast_user', 
+    'password' => $_ENV['DB_PASSWORD'] ?? '',            
     'charset' => 'utf8mb4'
 ];
 
@@ -17,7 +25,12 @@ $options = [
 
 try {
     $pdo = new PDO($dsn, $config['username'], $config['password'], $options);
+    // echo "✅ Conexão com banco estabelecida!\n";
 } catch (\PDOException $e) {
     error_log('DB connection error: ' . $e->getMessage());
     die('Erro de conexão com o banco de dados. Verifique os logs.');
 }
+
+
+
+

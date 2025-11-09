@@ -4,11 +4,19 @@
 # Dependências do Composer
 /vendor/
 
-# Logs
+# Logs (ignora todos os arquivos .log, exceto o .keep)
 /storage/logs/*.log
 !/storage/logs/.keep
 
-# Arquivos temporários de upload
+# Cache
+/storage/cache/
+!/storage/cache/.keep
+
+# Backups
+/storage/backups/
+!/storage/backups/.keep
+
+# Uploads temporários da fila
 /storage/uploads_queue/
 !/storage/uploads_queue/.keep
 
@@ -16,9 +24,6 @@
 /media_protected/
 !/media_protected/.keep
 
-# Cache e outros arquivos de storage
-/storage/cache/
-!/storage/cache/.keep
-
-/storage/backups/
-!/storage/backups/.keep
+# Imagens de capa enviadas (públicas)
+/public/assets/covers/
+!/public/assets/covers/.keep
