@@ -2,9 +2,6 @@
 // 1. Carrega o Autoloader do Composer (ESSENCIAL)
 require __DIR__ . '/../vendor/autoload.php';
 
-// $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..'); // Aponta para a raiz /etecast
-// $dotenv->load();
-
 $envFile = __DIR__ . '/../.env';
 if (file_exists($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -39,34 +36,62 @@ use app\controllers\AdminAuthController;
 use app\controllers\AdminController;
 use app\controllers\ContentController;
 use app\controllers\MediaController;
-use app\controllers\StudentController; // (Vamos criar este)
+use app\controllers\StudentController;
 
 $router = new Router();
 
 // --------------------------------------------------------------------------
-// Middlewares Globais (O seu código original está correto)
+// Middlewares Corrigidos - ORDEM IMPORTANTE!
 // --------------------------------------------------------------------------
-$router->before('GET|POST', '/(dashboard|catalog|content|history|logout)', function() {
-    if (!isset($_SESSION['student_id'])) {
-        // ... (lógica de exceção para primeiro acesso)
-        header('Location: ' . BASE_URL . '/login');
+
+// PRIMEIRO: Middleware para ADMIN (mais específico)
+$router->before('GET|POST', '/admin(/.*)?', function() {
+    $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    
+    // Permite acesso à página de login do admin
+    if (strpos($currentPath, '/admin/login') !== false) {
+        return;
+    }
+    
+    if (!isset($_SESSION['admin_id'])) {
+        header('Location: ' . BASE_URL . '/admin/login');
         exit();
     }
 });
-$router->before('GET|POST', '/admin(/.*)?', function() {
-    if (strpos($_SERVER['REQUEST_URI'], '/admin/login') === false) {
-        if (!isset($_SESSION['admin_id'])) {
-            header('Location: ' . BASE_URL . '/admin/login');
-            exit();
-        }
+
+// SEGUNDO: Middleware para ALUNO (menos específico)
+$router->before('GET|POST', '/|/(dashboard|catalog|content|history|logout)', function() {
+    $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $basePath = str_replace(BASE_URL, '', $currentPath);
+    
+    // Se for uma rota de admin, ignora este middleware
+    if (strpos($currentPath, '/admin') === 0) {
+        return;
+    }
+    
+    // Permite acesso às rotas de login e registro de senha
+    if ($basePath === '/login' || $basePath === '/register-password') {
+        return;
+    }
+    
+    if (!isset($_SESSION['student_id'])) {
+        header('Location: ' . BASE_URL . '/login');
+        exit();
     }
 });
 
 // --------------------------------------------------------------------------
 // Rotas de Autenticação de Aluno (Injetando $pdo)
 // --------------------------------------------------------------------------
-$authController = new AuthController($pdo); // <-- Injeta o $pdo
-$router->get('/login', function() use ($authController) { $authController->showLogin(); });
+$authController = new AuthController($pdo);
+$router->get('/login', function() use ($authController) { 
+    // Se já estiver logado, redireciona para a página inicial
+    if (isset($_SESSION['student_id'])) {
+        header('Location: ' . BASE_URL . '/');
+        exit();
+    }
+    $authController->showLogin(); 
+});
 $router->post('/login', function() use ($authController) { $authController->login($_POST); });
 $router->get('/register-password', function() use ($authController) { $authController->showRegisterPassword(); });
 $router->post('/register-password', function() use ($authController) { $authController->registerPassword($_POST); });
@@ -79,10 +104,18 @@ $adminAuthController = new AdminAuthController($pdo);
 $adminController = new AdminController($pdo);
 $contentController = new ContentController($pdo);
 
-$router->get('/admin/login', function() use ($adminAuthController) { $adminAuthController->showLogin(); });
+$router->get('/admin/login', function() use ($adminAuthController) { 
+    // Se já estiver logado como admin, redireciona para o dashboard
+    if (isset($_SESSION['admin_id'])) {
+        header('Location: ' . BASE_URL . '/admin');
+        exit();
+    }
+    $adminAuthController->showLogin(); 
+});
 $router->post('/admin/login', function() use ($adminAuthController) { $adminAuthController->login($_POST); });
 $router->get('/admin/logout', function() use ($adminAuthController) { $adminAuthController->logout(); });
 $router->get('/admin', function() use ($adminController) { $adminController->dashboard(); });
+
 // (Adicione suas outras rotas de admin aqui)
 $router->get('/admin/content/upload', function() use ($contentController) { $contentController->showUploadForm(); });
 $router->post('/admin/content/upload', function() use ($contentController) { $contentController->uploadContent($_POST, $_FILES); });
@@ -92,16 +125,16 @@ $router->get('/admin/content/upload-status/{job_id}', function($job_id) use ($co
 // Rotas de Conteúdo e Streaming de Aluno (Injetando $pdo)
 // --------------------------------------------------------------------------
 $mediaController = new MediaController($pdo);
-$studentController = new StudentController($pdo); // <-- AGORA ESTÁ ATIVO
+$studentController = new StudentController($pdo);
 
 // Rota principal (Home/Catálogo)
 $router->get('/', function() use ($studentController) {
-    $studentController->catalog(); // <-- AGORA CHAMA O CONTROLLER
+    $studentController->catalog();
 });
 
 // Rota para exibir o player (vídeo, podcast, PDF)
 $router->get('/content/view/(\d+)', function($contentId) use ($studentController) {
-    $studentController->viewContent($contentId); // <-- ROTA ATUALIZADA
+    $studentController->viewContent($contentId);
 });
 
 // Rota de streaming de mídia (protegida por token)
@@ -109,15 +142,19 @@ $router->get('/stream/(\d+)/(.+)', function($contentId, $filePath) use ($mediaCo
     $mediaController->serve($contentId, $filePath, $_GET['t'] ?? null);
 });
 
-// Rota para exibir o player (vídeo, podcast, PDF)
-$router->get('/content/view/(\d+)', function($contentId) {
-    // $studentController->viewContent($contentId);
-    echo "Exibindo conteúdo $contentId"; // Temporário
+// Rota do catálogo (alternativa)
+$router->get('/catalog', function() use ($studentController) {
+    $studentController->catalog();
 });
 
-// Rota de streaming de mídia (protegida por token)
-$router->get('/stream/(\d+)/(.+)', function($contentId, $filePath) use ($mediaController) {
-    $mediaController->serve($contentId, $filePath, $_GET['t'] ?? null);
+// Rota do histórico
+$router->get('/history', function() use ($studentController) {
+    $studentController->history();
+});
+
+// Rota do dashboard do aluno
+$router->get('/dashboard', function() use ($studentController) {
+    $studentController->dashboard();
 });
 
 // --------------------------------------------------------------------------

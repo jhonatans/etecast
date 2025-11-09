@@ -18,32 +18,32 @@ class StudentController {
      * Exibe o catálogo principal
      */
     public function catalog() {
-        // (O Middleware já protegeu esta rota)
         $studentName = $_SESSION['student_nome'] ?? 'Aluno';
+        
+        // 1. Buscar todos os conteúdos visíveis
+        $allContents = $this->contentModel->findAllVisible();
 
-        // 1. Buscar todos os conteúdos do banco
-        // (Este método 'findAllVisible' precisa ser adicionado ao Content.php)
-        try {
-            $contents = $this->contentModel->findAllVisible();
-        } catch (\Exception $e) {
-            error_log("Erro ao buscar conteúdos: " . $e->getMessage());
-            $contents = [];
+        // 2. Segmentar os conteúdos por tipo
+        $videos = [];
+        $podcasts = [];
+        $livros = [];
+
+        foreach ($allContents as $content) {
+            if ($content['tipo'] === 'video') {
+                $videos[] = $content;
+            } elseif ($content['tipo'] === 'podcast') {
+                $podcasts[] = $content;
+            } elseif ($content['tipo'] === 'pdf') {
+                $livros[] = $content;
+            }
         }
-
-        // 2. Define as cores e o título da página
+        
         $pageTitle = 'Catálogo de Conteúdo';
-        $colors = [
-            'primary-blue' => '#4285F4',
-            'ete-yellow' => '#FFC107',
-            'ete-green' => '#4CAF50',
-            'ete-red' => '#F44336',
-            'white' => '#FFFFFF',
-        ];
-
-        // 3. Carrega a view do catálogo (que por sua vez carrega header e footer)
+        $colors = [ 'primary-blue' => '#4285F4' ]; // (Passa cores para o layout)
+        
+        // 3. Carrega a view do catálogo
         require __DIR__ . '/../views/student/catalog.php';
     }
-
     /**
      * Exibe o player para um conteúdo
      */

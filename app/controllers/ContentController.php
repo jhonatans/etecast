@@ -32,37 +32,43 @@ class ContentController {
         require __DIR__ . '/../views/admin/upload_form.php';
     }
 
-    public function uploadContent($postData, $fileData) {
-        // 1. Validação básica do Admin logado
+public function uploadContent($postData, $fileData) {
+        // 1. Validação do Admin
         if (!isset($_SESSION['admin_id'])) {
-            $_SESSION['upload_error'] = 'Você não tem permissão para realizar esta ação.';
-            header('Location: ' . BASE_URL . '/admin/content/upload');
-            exit();
+            $this->redirectWithError('Você não tem permissão.');
         }
 
         // 2. Validação dos dados do formulário
         $title = trim($postData['title'] ?? '');
         $description = trim($postData['description'] ?? '');
         $contentType = trim($postData['content_type'] ?? '');
+        $mediaFile = $fileData['content_file'] ?? null;
+        $coverFile = $fileData['cover_image'] ?? null;
 
-        if (empty($title) || empty($contentType) || !in_array($contentType, ['video', 'podcast', 'pdf'])) {
-            $_SESSION['upload_error'] = 'Preencha todos os campos obrigatórios e selecione um tipo válido.';
-            header('Location: ' . BASE_URL . '/admin/content/upload');
-            exit();
+        if (empty($title) || empty($contentType) || !$mediaFile || $mediaFile['error'] !== UPLOAD_ERR_OK) {
+            $this->redirectWithError('Título, Tipo e Arquivo de Mídia são obrigatórios.');
+        }
+        
+        // 3. Validação e Upload da IMAGEM DE CAPA (se enviada)
+        $capaUrl = null;
+        if ($coverFile && $coverFile['error'] === UPLOAD_ERR_OK) {
+            $coverExt = strtolower(pathinfo($coverFile['name'], PATHINFO_EXTENSION));
+            if (!in_array($coverExt, ['jpg', 'jpeg', 'png', 'webp'])) {
+                $this->redirectWithError('Formato de capa inválido. Use JPG ou PNG.');
+            }
+            
+            $coverName = uniqid('cover_') . '.' . $coverExt;
+            $coverPath = __DIR__ . '/../../public/assets/covers/' . $coverName;
+            
+            if (move_uploaded_file($coverFile['tmp_name'], $coverPath)) {
+                $capaUrl = '/assets/covers/' . $coverName; // Caminho público
+            } else {
+                $this->redirectWithError('Falha ao mover a imagem de capa.');
+            }
         }
 
-        // 3. Validação do arquivo enviado
-        if (!isset($fileData['content_file']) || $fileData['content_file']['error'] !== UPLOAD_ERR_OK) {
-            $_SESSION['upload_error'] = 'Erro ao enviar o arquivo. Código: ' . $fileData['content_file']['error'];
-            header('Location: ' . BASE_URL . '/admin/content/upload');
-            exit();
-        }
-
-        $tempFilePath = $fileData['content_file']['tmp_name'];
-        $originalFileName = basename($fileData['content_file']['name']);
-        $fileExtension = strtolower(pathinfo($originalFileName, PATHINFO_EXTENSION));
-
-        // Validar extensões de arquivo
+        // 4. Validação do ARQUIVO DE MÍDIA
+        $fileExtension = strtolower(pathinfo($mediaFile['name'], PATHINFO_EXTENSION));
         $allowedExtensions = [
             'video' => ['mp4', 'mov', 'avi', 'mkv', 'webm'],
             'podcast' => ['mp3', 'wav', 'ogg'],
@@ -70,49 +76,65 @@ class ContentController {
         ];
 
         if (!in_array($fileExtension, $allowedExtensions[$contentType] ?? [])) {
-            $_SESSION['upload_error'] = 'Tipo de arquivo não permitido para ' . $contentType . '. Extensões válidas: ' . implode(', ', $allowedExtensions[$contentType]);
-            header('Location: ' . BASE_URL . '/admin/content/upload');
-            exit();
+            $this->redirectWithError('Tipo de arquivo de mídia não permitido.');
         }
 
-        // 4. Mover o arquivo para a fila de uploads temporários
-        $uniqueFileName = uniqid('upload_') . '_' . $originalFileName;
-        $destinationPath = STORAGE_UPLOADS_QUEUE_PATH . $uniqueFileName;
+        // 5. Mover a MÍDIA para a fila temporária
+        $tempMediaFileName = uniqid('upload_') . '_' . basename($mediaFile['name']);
+        $tempMediaDestPath = STORAGE_UPLOADS_QUEUE_PATH . $tempMediaFileName;
 
-        if (!move_uploaded_file($tempFilePath, $destinationPath)) {
-            $_SESSION['upload_error'] = 'Falha ao mover o arquivo enviado para a fila de processamento.';
-            error_log("ContentController: Falha ao mover arquivo {$tempFilePath} para {$destinationPath}");
-            header('Location: ' . BASE_URL . '/admin/content/upload');
-            exit();
+        if (!move_uploaded_file($mediaFile['tmp_name'], $tempMediaDestPath)) {
+            $this->redirectWithError('Falha ao mover o arquivo de mídia para a fila.');
         }
 
-        // 5. Registrar o trabalho na fila de processamento (tabela `queue_jobs`)
+        // 6. INSERIR no banco de dados PRIMEIRO (com status 'processing')
         try {
-            $stmt = $this->pdo->prepare("INSERT INTO queue_jobs (status, job_type, original_file_path, title, description, content_type, admin_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            // Usando o Model para criar a entrada
+            $contentId = $this->contentModel->create(
+                $contentType,
+                $title,
+                $description,
+                $capaUrl, // O novo campo
+                null, // arquivo (ainda não processado)
+                null, // hls_manifest (ainda não processado)
+                $_SESSION['admin_id'],
+                'processing' // O novo campo
+            );
+            
+            // 7. Registrar o JOB na fila, agora com o content_id
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO queue_jobs (status, job_type, original_file_path, content_type, admin_id, content_id) 
+                 VALUES (?, ?, ?, ?, ?, ?)"
+            );
             $stmt->execute([
                 'pending',
                 'transcode_media', 
-                $destinationPath,
-                $title,
-                $description,
+                $tempMediaDestPath, // O arquivo original
                 $contentType,
-                $_SESSION['admin_id']
+                $_SESSION['admin_id'],
+                $contentId // O ID do conteúdo que acabamos de criar
             ]);
-            $jobId = $this->pdo->lastInsertId();
 
-            $_SESSION['upload_success'] = 'Conteúdo "' . htmlspecialchars($title) . '" enviado com sucesso. O processamento (transcodificação) iniciará em breve. Job ID: ' . $jobId;
+            $_SESSION['upload_success'] = 'Conteúdo "' . htmlspecialchars($title) . '" enviado. O processamento iniciará em breve.';
             header('Location: ' . BASE_URL . '/admin/content/upload');
             exit();
 
         } catch (\PDOException $e) {
-            $_SESSION['upload_error'] = 'Erro interno ao registrar o trabalho: ' . $e->getMessage();
-            error_log("ContentController: Erro ao inserir job na fila: " . $e->getMessage());
-            // Tentar remover o arquivo do storage/uploads_queue se o DB falhar
-            unlink($destinationPath);
-            header('Location: ' . BASE_URL . '/admin/content/upload');
-            exit();
+            error_log("Erro no Upload: " . $e->getMessage());
+            // Tentar remover os arquivos se o DB falhar
+            if (isset($coverPath) && file_exists($coverPath)) unlink($coverPath);
+            if (file_exists($tempMediaDestPath)) unlink($tempMediaDestPath);
+            $this->redirectWithError('Erro interno de banco de dados.');
         }
     }
+    
+    // (Função de ajuda para evitar repetição)
+    private function redirectWithError($message) {
+        $_SESSION['upload_error'] = $message;
+        header('Location: ' . BASE_URL . '/admin/content/upload');
+        exit();
+    }
+    
     
     /**
      * Retorna o status de um trabalho de upload/transcodificação.

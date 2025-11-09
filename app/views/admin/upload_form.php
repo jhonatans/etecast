@@ -122,6 +122,11 @@
                 </select>
             </div>
             <div class="mb-3">
+                <label for="cover_image" class="form-label">Imagem de Capa (JPG, PNG)</label>
+                <input class="form-control" type="file" id="cover_image" name="cover_image" accept="image/jpeg,image/png">
+                <div class="form-text">A capa será pública. Envie apenas imagens, máx 2MB.</div>
+            </div>
+            <div class="mb-3">
                 <label for="content_file" class="form-label">Arquivo de Mídia</label>
                 <input class="form-control" type="file" id="content_file" name="content_file" required>
             </div>

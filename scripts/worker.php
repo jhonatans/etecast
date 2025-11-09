@@ -84,95 +84,79 @@ while (true) {
     sleep(2);
 }
 
-/**
- * Função para processar o trabalho de transcodificação de mídia.
- */
 function processTranscodeMediaJob(PDO $pdo, array $job) {
-    $contentModel = new Content($pdo);
-    $jobLog = "Iniciando transcodificação para " . $job['original_file_path'] . "\n";
-    $status = 'failed';
+    $contentModel = new \app\models\Content($pdo); // Use o namespace completo
+    $jobLog = "Iniciando processamento para Job ID: " . $job['id'] . ", Content ID: " . $job['content_id'] . "\n";
+    $status = 'failed'; // Padrão é falha
+    $contentId = $job['content_id'];
 
     try {
         $originalFilePath = $job['original_file_path'];
         $contentType = $job['content_type'];
-        $title = $job['title'];
-        $description = $job['description'];
-        $adminId = $job['admin_id'];
 
-        // Garante que o diretório de destino existe e é único para cada conteúdo
-        $contentBaseDir = MEDIA_PROTECTED_PATH . $contentType . '/' . uniqid('content_');
+        // Se o content_id não estiver no job, não podemos continuar
+        if (empty($contentId)) {
+            throw new \Exception("Job ID {$job['id']} não tem content_id associado.");
+        }
+        
+        // Garante que o diretório de destino existe
+        // Usa o ID do conteúdo para um caminho único
+        $contentBaseDir = MEDIA_PROTECTED_PATH . $contentType . '/' . $contentId; 
         if (!mkdir($contentBaseDir, 0775, true) && !is_dir($contentBaseDir)) {
              throw new \Exception("Não foi possível criar o diretório de destino: " . $contentBaseDir);
         }
 
-        $mediaFilePath = null; // Caminho final do arquivo no DB
+        $mediaFilePath = null; // Caminho final no DB
         $hlsManifestPath = null; 
 
         switch ($contentType) {
             case 'video':
-                // Chamar o script de transcodificação FFmpeg
+                // (Use o seu script transcode_video.sh corrigido com o '?' para áudio opcional)
                 $cmd = escapeshellcmd(__DIR__ . '/transcode_video.sh') . ' ' . escapeshellarg($originalFilePath) . ' ' . escapeshellarg($contentBaseDir);
                 $jobLog .= "Executando comando: $cmd\n";
                 
-                // Redireciona a saída do shell para o log do FFmpeg
                 $output = shell_exec($cmd . ' 2>&1');
                 file_put_contents(FFMPEG_LOG_PATH, $output, FILE_APPEND);
                 $jobLog .= "Output FFmpeg:\n" . $output . "\n";
 
-                // Verificar se o manifesto HLS foi criado com sucesso
                 if (file_exists($contentBaseDir . '/stream.m3u8')) {
-                    $mediaFilePath = $contentType . '/' . basename($contentBaseDir) . '/stream.m3u8';
-                    $hlsManifestPath = $contentType . '/' . basename($contentBaseDir) . '/stream.m3u8';
+                    $mediaFilePath = $contentType . '/' . $contentId . '/stream.m3u8';
+                    $hlsManifestPath = $contentType . '/' . $contentId . '/stream.m3u8';
                     $status = 'completed';
                     $jobLog .= "Transcodificação de vídeo concluída com sucesso.\n";
                 } else {
-                    $jobLog .= "Erro: Manifesto HLS 'stream.m3u8' não encontrado após transcodificação.\n";
+                    $jobLog .= "Erro: Manifesto HLS 'stream.m3u8' não encontrado.\n";
                     throw new \Exception("Manifesto HLS não gerado.");
                 }
                 break;
-
+            
             case 'podcast':
-                // Para podcast, apenas move o arquivo original ou faz uma cópia
-                $destFileName = basename($originalFilePath);
-                $finalMediaPath = $contentBaseDir . '/' . $destFileName;
-                if (!rename($originalFilePath, $finalMediaPath)) {
-                    throw new \Exception("Falha ao mover arquivo de podcast.");
-                }
-                $mediaFilePath = $contentType . '/' . basename($contentBaseDir) . '/' . $destFileName;
-                $status = 'completed';
-                $jobLog .= "Processamento de podcast concluído com sucesso.\n";
-                break;
-
             case 'pdf':
-                // Para PDF, apenas move o arquivo original
                 $destFileName = basename($originalFilePath);
                 $finalMediaPath = $contentBaseDir . '/' . $destFileName;
                 if (!rename($originalFilePath, $finalMediaPath)) {
-                    throw new \Exception("Falha ao mover arquivo PDF.");
+                    throw new \Exception("Falha ao mover arquivo.");
                 }
-                $mediaFilePath = $contentType . '/' . basename($contentBaseDir) . '/' . $destFileName;
+                $mediaFilePath = $contentType . '/' . $contentId . '/' . $destFileName;
                 $status = 'completed';
-                $jobLog .= "Processamento de PDF concluído com sucesso.\n";
+                $jobLog .= "Processamento de $contentType concluído.\n";
                 break;
 
             default:
-                throw new \Exception("Tipo de conteúdo inválido para processamento: " . $contentType);
+                throw new \Exception("Tipo de conteúdo inválido: " . $contentType);
         }
 
-        // Se o processamento foi um sucesso, insere o conteúdo na tabela `contents`
+        // Se foi um sucesso, ATUALIZA a entrada 'contents'
         if ($status === 'completed') {
-            $contentId = $contentModel->create(
-                $contentType,
-                $title,
-                $description,
+            $contentModel->updateAsProcessed(
+                $contentId,
                 $mediaFilePath, 
-                $hlsManifestPath, 
-                $adminId
+                $hlsManifestPath
             );
-            $jobLog .= "Conteúdo inserido no banco de dados com ID: " . $contentId . "\n";
+            $jobLog .= "Tabela 'contents' (ID: $contentId) atualizada para 'available'.\n";
         }
         
-        // Remove o arquivo original da fila de uploads temporários
+        // Remove o arquivo original da fila
         if (file_exists($originalFilePath)) {
             unlink($originalFilePath);
             $jobLog .= "Arquivo original removido da fila: " . $originalFilePath . "\n";
@@ -182,9 +166,15 @@ function processTranscodeMediaJob(PDO $pdo, array $job) {
         $jobLog .= "[ERRO CRÍTICO] " . $e->getMessage() . "\n";
         $status = 'failed';
         error_log("Worker job ID " . $job['id'] . " failed: " . $e->getMessage());
+        // Marca o conteúdo como 'failed' no banco
+        if (!empty($contentId)) {
+            $contentModel->updateAsFailed($contentId);
+            $jobLog .= "Tabela 'contents' (ID: $contentId) marcada como 'failed'.\n";
+        }
     } finally {
-        // Atualiza o status final do job e log
+        // Atualiza o status final do job
         $updateStmt = $pdo->prepare("UPDATE queue_jobs SET status = ?, finished_at = NOW(), log = CONCAT(IFNULL(log, ''), ?) WHERE id = ?");
         $updateStmt->execute([$status, $jobLog, $job['id']]);
     }
+
 }
