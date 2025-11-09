@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Script para corrigir permissões do EteCast
+echo "=========================================="
+echo "  CORRIGINDO PERMISSÕES DO ETECAST"
+echo "=========================================="
+
+# Navegar para o diretório do projeto
+cd /var/www/etecast
+
+echo "1. Definindo www-data como proprietário..."
+sudo chown -R www-data:www-data .
+
+echo "2. Aplicando permissões padrão para diretórios (755)..."
+sudo find . -type d -exec chmod 755 {} \;
+
+echo "3. Aplicando permissões padrão para arquivos (644)..."
+sudo find . -type f -exec chmod 644 {} \;
+
+echo "4. Aplicando permissões especiais para diretórios críticos..."
+
+# Storage - permissões completas de escrita
+sudo chmod -R 775 storage/
+sudo chmod -R 775 storage/logs/
+sudo chmod -R 775 storage/uploads_queue/
+sudo chmod -R 775 storage/temp/
+
+# Media protected - permissões completas
+sudo chmod -R 775 media_protected/
+sudo chmod -R 775 media_protected/video/
+sudo chmod -R 775 media_protected/audio/
+
+# Scripts - permissão de execução
+sudo chmod -R 755 scripts/
+sudo chmod +x scripts/*.sh 2>/dev/null
+
+# Configurações
+sudo chmod 755 config/
+sudo chmod 644 config/*.php 2>/dev/null
+
+# Public - permissões de leitura
+sudo chmod -R 755 public/
+sudo chmod 644 public/.htaccess 2>/dev/null
+
+echo "5. Corrigindo arquivos de log específicos..."
+sudo touch storage/logs/ffmpeg.log
+sudo touch storage/logs/app.log
+sudo touch storage/logs/worker.log
+
+sudo chown www-data:www-data storage/logs/ffmpeg.log
+sudo chown www-data:www-data storage/logs/app.log
+sudo chown www-data:www-data storage/logs/worker.log
+
+sudo chmod 664 storage/logs/ffmpeg.log
+sudo chmod 664 storage/logs/app.log
+sudo chmod 664 storage/logs/worker.log
+
+echo "6. Garantindo permissões de execução para este script..."
+sudo chmod +x scripts/fix_permissions.sh
+
+echo "7. Verificando permissões críticas..."
+echo "   Storage: $(ls -ld storage/)"
+echo "   Media: $(ls -ld media_protected/)"
+echo "   Scripts: $(ls -ld scripts/)"
+echo "   Logs: $(ls -ld storage/logs/)"
+
+echo ""
+echo "=========================================="
+echo "  PERMISSÕES CORRIGIDAS COM SUCESSO!"
+echo "=========================================="
+echo ""
+echo "Permissões aplicadas:"
+echo "• Proprietário: www-data:www-data"
+echo "• Diretórios: 755 (rwxr-xr-x)"
+echo "• Arquivos: 644 (rw-r--r--)"
+echo "• Storage/Media: 775 (rwxrwxr-x)"
+echo "• Scripts: 755 (rwxr-xr-x)"
+
+
+
+
+
+jhonathan@professor:~$ sudo chown -R $USER:www-data /var/www/etecast/
+[sudo] password for jhonathan:
+jhonathan@professor:~$ sudo chmod -R 775 /var/www/etecast/

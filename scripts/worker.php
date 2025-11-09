@@ -56,7 +56,8 @@ while (true) {
         if ($job) {
             $processedJobs++;
             echo "[" . date('Y-m-d H:i:s') . "] Processing job ID: " . $job['id'] . "\n";
-            $jobLog = $jobLog ?? '';
+            
+            $logMessage = isset($jobLog) ? substr($jobLog, 0, 1000) : 'Log não disponível';
 
             // Atualiza o status para 'processing'
             $truncatedLog = substr($jobLog, 0, 16000);

@@ -32,7 +32,7 @@ require __DIR__ . '/../layouts/header.php';
 function renderContentCard($content) {
     // Define um ícone e capa padrão
     $icon = 'bi-question-circle';
-    $capa_padrao = 'https://via.placeholder.com/300x200.png?text=ETECast';
+    $capa_padrao = '/assets/img/etecast_logo.png';
     if ($content['tipo'] === 'video') $icon = 'bi-camera-video-fill text-danger';
     if ($content['tipo'] === 'podcast') $icon = 'bi-mic-fill text-primary';
     if ($content['tipo'] === 'pdf') $icon = 'bi-file-earmark-pdf-fill text-success';
