@@ -39,11 +39,12 @@ class StudentController {
         }
         
         $pageTitle = 'Catálogo de Conteúdo';
-        $colors = [ 'primary-blue' => '#4285F4' ]; // (Passa cores para o layout)
+        $colors = [ 'primary-blue' => '#4285F4' ];
         
         // 3. Carrega a view do catálogo
         require __DIR__ . '/../views/student/catalog.php';
     }
+    
     /**
      * Exibe o player para um conteúdo
      */
@@ -63,16 +64,30 @@ class StudentController {
         // 2. Determina o caminho do recurso a ser protegido pelo token
         $resourcePath = $content['hls_manifest'] ?: $content['arquivo'];
 
+        // ADICIONADO: Garantia de que o recurso existe
+        if (empty($resourcePath)) {
+            echo "Erro: Conteúdo mal configurado (sem 'hls_manifest' ou 'arquivo').";
+            return;
+        }
+
+        // 3. Gera o token para o recurso
         $token = $tokenModel->generate($resourcePath, 600); // 10 minutos
 
-        // 3. Constrói a URL segura que o player usará
-        $streamingUrl = BASE_URL . '/stream/' . $contentId . '/' . basename($resourcePath) . '?t=' . $token;
+        // 4. Constrói a URL BASE (sem token)
+        $manifestBaseUrl = BASE_URL . '/stream/' . $contentId . '/' . basename($resourcePath);
+        
+        // 5. Constrói a URL segura COMPLETA (para fallback e outros tipos)
+        $streamingUrl = $manifestBaseUrl . '?t=' . $token;
 
-        // 4. Define as cores e o título da página
+        // 6. Define as cores e o título da página
         $pageTitle = htmlspecialchars($content['titulo']);
         $colors = [ 'primary-blue' => '#4285F4' ];
 
-        // 5. Carrega a view do player
+
+
+        // var_dump("TESTE DO CONTROLLER:", $manifestBaseUrl, $token);
+        // die();
+        // 7. Carrega a view do player
         require __DIR__ . '/../views/student/player.php';
     }
 }

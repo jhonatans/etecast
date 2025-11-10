@@ -56,9 +56,14 @@ while (true) {
         if ($job) {
             $processedJobs++;
             echo "[" . date('Y-m-d H:i:s') . "] Processing job ID: " . $job['id'] . "\n";
-            
-            $logMessage = isset($jobLog) ? substr($jobLog, 0, 1000) : 'Log não disponível';
 
+            // CORRIJA esta linha (provavelmente linha 61):
+            //$logEntry = isset($jobLog) && !empty($jobLog) ? substr($jobLog, 0, 1000) : 'Log não disponível para job ' . $job['id'];
+            // $jobLog = '';
+            // $logEntry = 'Iniciando job ' . $job['id'];
+            if (!isset($jobLog) || $jobLog === null) {
+            $jobLog = '';
+            }
             // Atualiza o status para 'processing'
             $truncatedLog = substr($jobLog, 0, 16000);
             $updateStmt = $pdo->prepare("UPDATE queue_jobs SET status = 'failed', finished_at = NOW(), log = ? WHERE id = ?");
@@ -113,8 +118,15 @@ function processTranscodeMediaJob(PDO $pdo, array $job) {
         // Garante que o diretório de destino existe
         // Usa o ID do conteúdo para um caminho único
         $contentBaseDir = MEDIA_PROTECTED_PATH . $contentType . '/' . $contentId; 
-        if (!mkdir($contentBaseDir, 0775, true) && !is_dir($contentBaseDir)) {
-             throw new \Exception("Não foi possível criar o diretório de destino: " . $contentBaseDir);
+
+        // CORREÇÃO: Verifica se o diretório já existe antes de criar
+        if (!is_dir($contentBaseDir)) {
+            if (!mkdir($contentBaseDir, 0775, true)) {
+                throw new \Exception("Não foi possível criar o diretório de destino: " . $contentBaseDir);
+            }
+            $jobLog .= "✅ Diretório criado: $contentBaseDir\n";
+        } else {
+            $jobLog .= "ℹ️ Diretório já existe: $contentBaseDir\n";
         }
 
         $mediaFilePath = null; // Caminho final no DB
@@ -122,24 +134,25 @@ function processTranscodeMediaJob(PDO $pdo, array $job) {
 
         switch ($contentType) {
             case 'video':
-                // (Use o seu script transcode_video.sh corrigido com o '?' para áudio opcional)
-                $cmd = escapeshellcmd(__DIR__ . '/transcode_video.sh') . ' ' . escapeshellarg($originalFilePath) . ' ' . escapeshellarg($contentBaseDir);
-                $jobLog .= "Executando comando: $cmd\n";
-                
-                $output = shell_exec($cmd . ' 2>&1');
-                file_put_contents(FFMPEG_LOG_PATH, $output, FILE_APPEND);
-                $jobLog .= "Output FFmpeg:\n" . $output . "\n";
+            // Caminho completo do script de transcodificação
+            $cmd = escapeshellcmd(__DIR__ . '/transcode_video.sh') . ' ' . escapeshellarg($originalFilePath) . ' ' . escapeshellarg($contentBaseDir);
+            $jobLog .= "Executando comando: $cmd\n";
 
-                if (file_exists($contentBaseDir . '/stream.m3u8')) {
-                    $mediaFilePath = $contentType . '/' . $contentId . '/stream.m3u8';
-                    $hlsManifestPath = $contentType . '/' . $contentId . '/stream.m3u8';
-                    $status = 'completed';
-                    $jobLog .= "Transcodificação de vídeo concluída com sucesso.\n";
-                } else {
-                    $jobLog .= "Erro: Manifesto HLS 'stream.m3u8' não encontrado.\n";
-                    throw new \Exception("Manifesto HLS não gerado.");
-                }
-                break;
+            $output = shell_exec($cmd . ' 2>&1');
+            file_put_contents(FFMPEG_LOG_PATH, $output, FILE_APPEND);
+            $jobLog .= "Output FFmpeg:\n" . $output . "\n";
+
+            // Verifica se o arquivo HLS foi gerado
+            $manifestFile = $contentBaseDir . '/stream.m3u8';
+            if (file_exists($manifestFile)) {
+                $mediaFilePath = 'video/' . $contentId . '/stream.m3u8';
+                $hlsManifestPath = $mediaFilePath;
+                $status = 'completed';
+                $jobLog .= "✅ Transcodificação concluída. Manifesto HLS: $manifestFile\n";
+            } else {
+                throw new \Exception("Manifesto HLS não encontrado após a transcodificação.");
+            }
+            break;
             
             case 'podcast':
             case 'pdf':

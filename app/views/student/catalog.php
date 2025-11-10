@@ -99,6 +99,25 @@ function renderContentCard($content) {
     </div>
 </div>
 
+<video id="videoPlayer" controls style="width:100%; max-height:70vh; background:#000;"></video>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('videoPlayer');
+    const src = '<?= BASE_URL ?>/media_protected/video/<?= $content['id'] ?>/stream.m3u8';
+
+    if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(src);
+        hls.attachMedia(video);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = src;
+    } else {
+        video.innerHTML = "<p style='color:white;text-align:center'>Seu navegador não suporta vídeo HLS.</p>";
+    }
+});
+</script>
+
 <?php 
 require __DIR__ . '/../layouts/footer.php'; 
 ?>

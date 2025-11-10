@@ -167,8 +167,36 @@ public function uploadContent($postData, $fileData) {
         }
         exit();
     }
-}
 
+
+    public function play($id)
+    {
+        // 1. Buscar o conteúdo pelo ID
+        $content = $this->contentModel->findById($id);
+        if (!$content) {
+            http_response_code(404);
+            echo "Conteúdo não encontrado.";
+            exit();
+        }
+
+        // 2. Montar a URL do streaming de acordo com o tipo
+        if ($content['tipo'] === 'video') {
+            $streamingUrl = BASE_URL . '/media_protected/video/' . $content['id'] . '/stream.m3u8';
+        } elseif ($content['tipo'] === 'podcast') {
+            $streamingUrl = BASE_URL . '/media_protected/podcast/' . $content['arquivo'];
+        } elseif ($content['tipo'] === 'pdf') {
+            $streamingUrl = BASE_URL . '/media_protected/livros/' . $content['arquivo'];
+        } else {
+            http_response_code(400);
+            echo "Tipo de conteúdo inválido.";
+            exit();
+        }
+
+        // 3. Chamar o player (view existente)
+        require __DIR__ . '/../views/content/player.php';
+    }
+
+}
 // // Model para Content
 // namespace App\Models;
 // use PDO;

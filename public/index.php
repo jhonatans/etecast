@@ -1,4 +1,5 @@
 <?php
+opcache_reset();
 // 1. Carrega o Autoloader do Composer (ESSENCIAL)
 require __DIR__ . '/../vendor/autoload.php';
 // use Dotenv\Dotenv;
