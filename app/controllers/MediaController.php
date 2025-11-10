@@ -34,15 +34,19 @@ class MediaController {
         }
 
         // 3. DETERMINAR O RECURSO QUE O TOKEN DEVE PROTEGER
-        // Este é o caminho que foi gerado pelo StudentController (corrigido)
-        $expectedResourcePath = $content['hls_manifest'] ?: $content['arquivo'];
+        // CORREÇÃO CRÍTICA: Deve incluir TIPO/ID/FILENAME, IGUAL AO GERADOR
+        $filename = basename($content['hls_manifest'] ?: $content['arquivo']);
+        $expectedResourcePath = $content['tipo'] . '/' . $contentId . '/' . $filename;
+
         if (empty($expectedResourcePath)) {
-            $this->sendError(500, "Conteúdo mal configurado (sem manifesto ou arquivo).");
+             $this->sendError(500, "Conteúdo mal configurado (sem manifesto ou arquivo).");
         }
 
-        // 4. VALIDAR O TOKEN (Usando o objeto instanciado no construtor)
-        if ($this->tokenModel->validate($expectedResourcePath, $token) === false) { 
-            $this->sendError(403, "Token inválido, expirado ou não corresponde ao recurso.");
+        // 4. VALIDAR O TOKEN
+        // Verificamos se o token é válido PARA O RECURSO ESPERADO.
+        if ($this->tokenModel->validate($expectedResourcePath, $token) === false) {
+             // Se falhar, envie o erro e pare
+             $this->sendError(403, "Token inválido, expirado ou não corresponde ao recurso.");
         }
         
         // 5. SE O TOKEN É VÁLIDO, O RESTO DO CÓDIGO EXECUTA

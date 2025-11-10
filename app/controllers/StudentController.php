@@ -62,20 +62,12 @@ class StudentController {
         $tokenModel = new Token();
 
         // 2. Determina o caminho do recurso a ser protegido pelo token
-        $resourcePath = $content['hls_manifest'] ?: $content['arquivo'];
-
-        // --- INÍCIO DO HACK DE CORREÇÃO ---
-        // O MediaController.php antigo e com bugs está a validar contra
-        // um caminho que não inclui o contentId.
-        // Geramos um token que corresponda a esse bug.
-        $buggyResourcePath = $content['tipo'] . '/' . basename($resourcePath);
-        // --- FIM DO HACK DE CORREÇÃO ---
-
-        $token = $tokenModel->generate($buggyResourcePath, 600);
-        // $token = Token::generate("video/{$contentId}/stream.m3u8", $_ENV['APP_KEY']);
-
+        // CORREÇÃO: Usar TIPO/ID/FILENAME
+        $filename = basename($content['hls_manifest'] ?: $content['arquivo']);
+        $resourcePath = $content['tipo'] . '/' . $contentId . '/' . $filename; 
+        
         // ADICIONADO: Garantia de que o recurso existe
-        if (empty($resourcePath)) {
+        if (empty($filename)) { // Verifica se $filename é nulo/vazio
             echo "Erro: Conteúdo mal configurado (sem 'hls_manifest' ou 'arquivo').";
             return;
         }
