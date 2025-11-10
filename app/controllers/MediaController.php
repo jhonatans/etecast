@@ -21,7 +21,7 @@ class MediaController {
      * A URL esperada é /stream/{contentId}/{fileName}?t={token}
      */
     public function serve($contentId, $fileName, $token = null) {
-        
+            
         // 1. VERIFICAÇÃO DO TOKEN
         if (!$token) {
             $this->sendError(403, "Token de acesso necessário.");
@@ -34,26 +34,21 @@ class MediaController {
         }
 
         // 3. DETERMINAR O RECURSO QUE O TOKEN DEVE PROTEGER
-        //
-        //    *** ESTA É A CORREÇÃO CRÍTICA ***
-        //
-        // A lógica de validação AGORA É IDÊNTICA à lógica de geração
-        // no StudentController.
+        // Este é o caminho que foi gerado pelo StudentController (corrigido)
         $expectedResourcePath = $content['hls_manifest'] ?: $content['arquivo'];
-
         if (empty($expectedResourcePath)) {
-             $this->sendError(500, "Conteúdo mal configurado (sem manifesto ou arquivo).");
+            $this->sendError(500, "Conteúdo mal configurado (sem manifesto ou arquivo).");
         }
 
-        // 4. VALIDAR O TOKEN
-        // Verificamos se o token é válido PARA O RECURSO ESPERADO.
-        if ($this->tokenModel->validate($expectedResourcePath, $token) === false) {
-             // Se falhar, envie o erro e pare
-             $this->sendError(403, "Token inválido, expirado ou não corresponde ao recurso.");
+        // 4. VALIDAR O TOKEN (Usando o objeto instanciado no construtor)
+        if ($this->tokenModel->validate($expectedResourcePath, $token) === false) { 
+            $this->sendError(403, "Token inválido, expirado ou não corresponde ao recurso.");
         }
         
         // 5. SE O TOKEN É VÁLIDO, O RESTO DO CÓDIGO EXECUTA
         $sanitizedFileName = basename($fileName); 
+        
+        // Caminho no servidor (usando a constante correta MEDIA_PROTECTED_PATH)
         $realSystemPath = MEDIA_PROTECTED_PATH . $content['tipo'] . '/' . $contentId . '/' . $sanitizedFileName;
 
         if (!file_exists($realSystemPath)) {
@@ -61,8 +56,8 @@ class MediaController {
         }
         
         // 6. X-Accel-Redirect
-        $nginxRedirectPath = '/protected_media/' . $content['tipo'] . '/' . $contentId . '/' . $sanitizedFileName;
-
+        $nginxRedirectPath = '/media_protected/' . $content['tipo'] . '/' . $contentId . '/' . $sanitizedFileName;
+        
         header_remove(); 
         header("Cache-Control: private");
         
@@ -70,6 +65,8 @@ class MediaController {
             header("Content-Type: application/vnd.apple.mpegurl");
         } elseif (pathinfo($sanitizedFileName, PATHINFO_EXTENSION) === 'ts') {
             header("Content-Type: video/mp2t");
+        } elseif (pathinfo($sanitizedFileName, PATHINFO_EXTENSION) === 'pdf') {
+            header("Content-Type: application/pdf");
         }
 
         header("X-Accel-Redirect: " . $nginxRedirectPath);

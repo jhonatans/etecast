@@ -72,6 +72,7 @@ class StudentController {
         // --- FIM DO HACK DE CORREÇÃO ---
 
         $token = $tokenModel->generate($buggyResourcePath, 600);
+        // $token = Token::generate("video/{$contentId}/stream.m3u8", $_ENV['APP_KEY']);
 
         // ADICIONADO: Garantia de que o recurso existe
         if (empty($resourcePath)) {

@@ -7,8 +7,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
 // Chave secreta para criptografia.
-define('APP_SECRET', getenv('APP_SECRET') ?: 'jjhjhjh');
-// var_dump('APP_SECRET definida como: ' . APP_SECRET . "\n");
+define('APP_SECRET', getenv('APP_SECRET') ?: 'teste1234');
+// define('APP_KEY', getenv('APP_KEY') ?: '');
+//var_dump('APP_SECRET definida como: ' . APP_SECRET . "\n");
 
 // Configurações do Redis
 define('REDIS_HOST', getenv('REDIS_HOST') ?: '127.0.0.1');

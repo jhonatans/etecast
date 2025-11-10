@@ -22,6 +22,7 @@ require __DIR__ . '/../vendor/autoload.php';
 //         $_SERVER[$key] = $value;
 //     }
 // }
+
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..'); // Aponta para a raiz /etecast
 $dotenv->load();
 
