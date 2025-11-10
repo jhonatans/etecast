@@ -2,7 +2,10 @@
 .env
 
 # Dependências do Composer
-/vendor/
+vendor/*
+!vendor/autoload.php
+!vendor/autoload.php:Zone.Identifier
+!vendor/composer/
 
 # Logs (ignora todos os arquivos .log, exceto o .keep)
 /storage/logs/*.log
