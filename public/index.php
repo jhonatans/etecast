@@ -34,8 +34,8 @@ $router = new App\Core\Router();
 $router->add('GET', '/', ['AuthController', 'showLogin']);
 $router->add('POST', '/login', ['AuthController', 'doLogin']);
 $router->add('GET', '/logout', ['AuthController', 'logout']);
-$router->add('GET', '/register', ['AuthController', 'showRegister']); // Primeiro acesso
-$router->add('POST', '/register', ['AuthController', 'doRegister']); // Primeiro acesso
+$router->add('GET', '/register', ['AuthController', 'showRegister']); 
+$router->add('POST', '/register', ['AuthController', 'doRegister']); 
 
 // Rotas de Autenticação e Aluno
 $router->add('GET', '/', ['AuthController', 'showLogin']);
@@ -43,10 +43,10 @@ $router->add('POST', '/login', ['AuthController', 'doLogin']);
 $router->add('GET', '/logout', ['AuthController', 'logout']);
 
 // Fluxo de Primeiro Acesso
-$router->add('GET', '/register', ['AuthController', 'showRegister']); // Pede matrícula + data nasc.
-$router->add('POST', '/register', ['AuthController', 'doRegisterCheck']); // Verifica os dados
-$router->add('GET', '/create-password', ['AuthController', 'showCreatePassword']); // Mostra form de senha
-$router->add('POST', '/create-password', ['AuthController', 'doCreatePassword']); // Salva a senha
+$router->add('GET', '/register', ['AuthController', 'showRegister']); 
+$router->add('POST', '/register', ['AuthController', 'doRegisterCheck']); 
+$router->add('GET', '/create-password', ['AuthController', 'showCreatePassword']); 
+$router->add('POST', '/create-password', ['AuthController', 'doCreatePassword']); 
 
 // Rotas de Conteúdo (Área do Aluno)
 $router->add('GET', '/dashboard', ['StudentController', 'dashboard']);

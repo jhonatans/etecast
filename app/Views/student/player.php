@@ -56,21 +56,15 @@
                 </iframe>
                 
                 <script>
-                    // Nossa URL segura (ex: /secure_media?file=...)
                     const pdfUrl = '<?php echo $secureUrl; ?>';
                     
                     const iframe = document.getElementById('pdf-viewer-container');
                     
-                    // 3. Espere o 'viewer.html' carregar
                     iframe.onload = function() {
-                        // 4. Use a API do PDF.js para mandar ele abrir nossa URL
                         iframe.contentWindow.PDFViewerApplication.open(pdfUrl);
 
-                        // 5. O seu script antigo para desabilitar botões
-                        // (agora DENTRO do 'onload')
                         var iframeWindow = iframe.contentWindow;
                         
-                        // (Vamos esperar a aplicação estar 100% pronta)
                         iframeWindow.PDFViewerApplication.initializedPromise.then(function () {
                             iframeWindow.PDFViewerApplicationOptions.set('toolbar', {
                                 download: false,
