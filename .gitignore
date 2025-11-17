@@ -1,2 +1,12 @@
 create_.php
 clean_media.php
+
+# Arquivos de mídia grandes
+public/media/video/*.mp4
+public/media/video/*.mov
+public/media/video/*.avi
+!public/media/video/.keep
+
+# Ou ignore toda a pasta video (mantendo a estrutura)
+public/media/video/**
+!public/media/video/.keep
