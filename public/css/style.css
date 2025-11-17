@@ -1,0 +1,44 @@
+:root {
+    --etecast-blue: #3a7dc2;
+    --etecast-yellow: #fddc00;
+    --etecast-green: #00a651;
+    --etecast-red: #ed1c24;
+    --etecast-white: #ffffff;
+    --etecast-dark: #212529; 
+}
+
+
+/* Botão Primário  */
+.btn-primary {
+    background-color: var(--etecast-blue);
+    border-color: var(--etecast-blue);
+    color: var(--etecast-white);
+}
+
+.btn-primary:hover {
+    background-color: #2e649b; /* Um azul um pouco mais escuro */
+    border-color: #2e649b;
+}
+
+/* Links */
+a {
+    color: var(--etecast-blue);
+}
+a:hover {
+    color: #2e649b;
+}
+
+/* Cor de fundo básica */
+body {
+    background-color: #f4f7f6;
+}
+
+/* Barra de Navegação  */
+.navbar-dark {
+    background-color: var(--etecast-blue);
+}
+
+/* Cores de destaque */
+.text-yellow { color: var(--etecast-yellow); }
+.text-green { color: var(--etecast-green); }
+.text-red {   color: var(--etecast-red); }
