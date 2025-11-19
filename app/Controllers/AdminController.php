@@ -139,7 +139,7 @@ class AdminController extends Controller {
     public function listLogs() {
         $this->checkAuth(); 
         $logModel = new AccessLog();
-        $this.view('admin/logs', [
+        $this->view('admin/logs', [
             'titulo' => 'Logs de Acesso',
             'logs' => $logModel->listLogs(100)
         ]);
