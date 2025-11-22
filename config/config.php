@@ -7,8 +7,9 @@ define('DB_USER', 'etecast_user');
 define('DB_PASS', 'etecast#2025'); 
 
 // --- 2. Configurações da Aplicação ---
-define('SITE_URL', 'http://etecast.local');
-define('DEBUG_MODE', true);
+define('SITE_URL', 'http://' . $_SERVER['HTTP_HOST']); // REMOTO
+//define('SITE_URL', 'http://etecast.local'); // LOCAL
+//define('DEBUG_MODE', true);
 
 // Timezone (Correto, como você definiu)
 date_default_timezone_set('America/Sao_Paulo');

@@ -10,10 +10,12 @@ require_once BASE_PATH . '/config/config.php';
 session_set_cookie_params([
     'lifetime' => SESSION_TTL,
     'path' => '/',
-    'domain' => 'etecast.local', 
+    'domain' => '', 
+    //'domain' => 'etecast.local', 
     'secure' => false,
     'httponly' => true,
-    'samesite' => 'Strict'
+    'samesite' => 'Lax' // 'Lax' para IP
+    //'samesite' => 'Strict' // 'Strict' para domínio
 ]);
 session_start();
 
