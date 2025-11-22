@@ -18,10 +18,28 @@ class StudentController extends Controller {
     }
 
     public function dashboard() {
-        $conteudos = $this->contentModel->findAllVisible();
+        // 1. Buscar todos os conteúdos visíveis
+        $todosConteudos = $this->contentModel->findAllVisible();
         $this->view('student/dashboard', [
             'titulo' => 'Meu Dashboard',
-            'conteudos' => $conteudos
+            'conteudos' => $todosConteudos
+        ]);
+
+        // 2. Buscar Top 5
+        $top5 = $this->contentModel->getTop5();
+
+        // 3. Separar por categorias
+        $videos = array_filter($todosConteudos, fn($c) => $c['tipo'] === 'video');
+        $podcasts = array_filter($todosConteudos, fn($c) => $c['tipo'] === 'podcast');
+        $pdfs = array_filter($todosConteudos, fn($c) => $c['tipo'] === 'pdf');
+
+        // 4. Enviar tudo para a View
+        $this->view('student/dashboard', [
+            'titulo' => 'Meu Dashboard',
+            'top5' => $top5,
+            'videos' => $videos,
+            'podcasts' => $podcasts,
+            'pdfs' => $pdfs
         ]);
     }
 
