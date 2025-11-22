@@ -1,5 +1,6 @@
 create_.php
 clean_media.php
+hash.php
 
 # Arquivos de mídia grandes
 public/media/video/*.mp4
