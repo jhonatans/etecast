@@ -54,6 +54,3 @@ class MediaHelper {
     }
 }
 
-// Registrar este Helper no Autoloader
-// Adicione esta linha em /var/www/etecast/public/index.php (junto com os outros require_once)
-// require_once BASE_PATH . '/app/Helpers/MediaHelper.php';

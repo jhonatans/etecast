@@ -37,8 +37,8 @@ class Autoloader {
         if (file_exists($file)) {
             require_once $file;
         } else {
-            // (Ajuda para depuração: se o arquivo não for encontrado)
-            // error_log("Autoloader: Arquivo não encontrado - " . $file);
+            // Lançar um erro ou logar que o arquivo não foi encontrado
+            error_log("Autoloader: arquivo não encontrado para a classe $className em $file");
         }
     }
 }
