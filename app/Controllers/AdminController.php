@@ -144,4 +144,43 @@ class AdminController extends Controller {
             'logs' => $logModel->listLogs(100)
         ]);
     }
+
+    // --- GESTÃO DE USUÁRIOS ---
+
+    public function listUsers() {
+        $this->checkAuth();
+        $userModel = new \App\Models\User();
+        
+        $this->view('admin/users_list', [
+            'titulo' => 'Gerenciar Usuários',
+            'users' => $userModel->getAll()
+        ]);
+    }
+
+    public function addUser() {
+        $this->checkAuth();
+        
+        $matricula = $_POST['matricula'] ?? '';
+        $nome = $_POST['nome'] ?? '';
+        $data_nasc = $_POST['data_nascimento'] ?? '';
+        $role = $_POST['role'] ?? 'student';
+
+        if ($matricula && $nome && $data_nasc) {
+            $userModel = new \App\Models\User();
+            try {
+                $userModel->create($matricula, $nome, $data_nasc, $role);
+            } catch (\Exception $e) {
+                $this->view('admin/users_list', ['erro' => 'Erro ao criar usuário: ' . $e->getMessage()]);
+                return;
+            }
+        }
+        $this->redirect('/admin/users');
+    }
+
+    public function deleteUser($id) {
+        $this->checkAuth();
+        $userModel = new \App\Models\User();
+        $userModel->delete($id);
+        $this->redirect('/admin/users');
+    }
 }

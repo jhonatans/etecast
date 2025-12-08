@@ -35,9 +35,15 @@ class AuthController extends Controller {
             
             // Sucesso!
             session_regenerate_id(true); 
-            unset($_SESSION['aluno_id']);
+            
+            // Limpa sessão de admin para evitar conflitos
+            unset($_SESSION['admin_id']); 
+            unset($_SESSION['admin_username']);
+
+            // Salva os dados do aluno, INCLUINDO O ROLE
             $_SESSION['aluno_id'] = $aluno['id'];
             $_SESSION['aluno_nome'] = $aluno['nome'];
+            $_SESSION['aluno_role'] = $aluno['role'];
             
             // --- LOG DE LOGIN ---
             try {
