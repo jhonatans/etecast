@@ -53,6 +53,10 @@ $router->add('POST', '/create-password', ['AuthController', 'doCreatePassword'])
 // Rotas de Conteúdo (Área do Aluno)
 $router->add('GET', '/dashboard', ['StudentController', 'dashboard']);
 $router->add('GET', '/content/{id}', ['StudentController', 'showContent']);
+$router->add('GET', '/creator/upload', ['UploadController', 'showForm']);
+
+// 2. Rota para processar o envio (AJAX do formulário)
+$router->add('POST', '/upload/handler', ['UploadController', 'handle']);
 
 // Rota de Mídia Segura
 $router->add('GET', '/secure_media', ['MediaController', 'getSecureMedia']);
@@ -68,6 +72,12 @@ $router->add('GET', '/admin/dashboard', ['AdminController', 'dashboard']);
 $router->add('GET', '/admin/content', ['AdminController', 'listContent']);
 $router->add('GET', '/admin/content/add', ['AdminController', 'showAddContent']);
 $router->add('POST', '/admin/content/add', ['AdminController', 'doAddContent']);
+$router->add('POST', '/upload/handler', ['UploadController', 'handle']);
+
+// Gestão de Usuários 
+$router->add('GET', '/admin/users', ['AdminController', 'listUsers']);
+$router->add('POST', '/admin/users/add', ['AdminController', 'addUser']);
+$router->add('GET', '/admin/users/delete/{id}', ['AdminController', 'deleteUser']);
 
 // Logs
 $router->add('GET', '/admin/logs', ['AdminController', 'listLogs']);

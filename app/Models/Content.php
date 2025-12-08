@@ -52,4 +52,11 @@ class Content extends BaseModel {
         return $stmt->execute([$tipo, $titulo, $descricao, $arquivo, $cover_image, $adminId]);
     
     }
+
+    public function createAdvanced($tipo, $titulo, $descricao, $arquivo, $cover, $authType, $authId) {
+        $sql = "INSERT INTO contents (tipo, titulo, descricao, arquivo, cover_image, author_type, criado_por) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$tipo, $titulo, $descricao, $arquivo, $cover, $authType, $authId]);
+    }
 }
