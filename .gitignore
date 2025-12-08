@@ -11,3 +11,7 @@ public/media/video/*.avi
 # Ou ignore toda a pasta video (mantendo a estrutura)
 public/media/video/**
 !public/media/video/.keep
+public/media/podcast/**
+!public/media/podcast/.keep
+public/media/pdf/**
+!public/media/pdf/.keep

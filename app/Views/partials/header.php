@@ -76,6 +76,9 @@ if (isset($_SESSION['admin_id'])) {
                     <a class="nav-link" href="/admin/content">Conteúdos</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="/admin/users">Usuários</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="/admin/logs">Logs</a>
                 </li>
             </ul>
