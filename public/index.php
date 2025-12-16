@@ -6,18 +6,26 @@ define('BASE_PATH', dirname(__DIR__));
 require_once BASE_PATH . '/config/config.php';
 
 // 1. Iniciar a sessão com segurança
+//$domain = $_SERVER['HTTP_HOST'];
+//$isLocal = strpos($domain, 'localhost') !== false || strpos($domain, '.local') !== false;
 
 session_set_cookie_params([
     'lifetime' => SESSION_TTL,
     'path' => '/',
     'domain' => '', 
-    //'domain' => 'etecast.local', 
+    //'domain' => 'etecast.ddns.net',
     'secure' => false,
     'httponly' => true,
     'samesite' => 'Lax' // 'Lax' para IP
     //'samesite' => 'Strict' // 'Strict' para domínio
 ]);
 session_start();
+
+// Debug: verificar sessão
+if (DEBUG_MODE) {
+    error_log("Sessão iniciada: " . session_id());
+    error_log("Domínio: " . $_SERVER['HTTP_HOST']);
+}
 
 // 2. Carregar Configurações e Autoloader
 require_once BASE_PATH . '/app/Core/Autoloader.php';

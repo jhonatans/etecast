@@ -20,10 +20,10 @@ class StudentController extends Controller {
     public function dashboard() {
         // 1. Buscar todos os conteúdos visíveis
         $todosConteudos = $this->contentModel->findAllVisible();
-        $this->view('student/dashboard', [
-            'titulo' => 'Meu Dashboard',
-            'conteudos' => $todosConteudos
-        ]);
+       // $this->view('student/dashboard', [
+       //     'titulo' => 'Meu Dashboard',
+       //     'conteudos' => $todosConteudos
+       // ]);
 
         // 2. Buscar Top 5
         $top5 = $this->contentModel->getTop5();
