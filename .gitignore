@@ -10,4 +10,4 @@ public/media/video/*.avi
 
 # Ou ignore toda a pasta video (mantendo a estrutura)
 public/media/video/**
-!public/media/video/.keep
+!public/media/video/.keeppublic/media/
