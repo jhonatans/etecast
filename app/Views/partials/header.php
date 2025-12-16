@@ -16,6 +16,8 @@ $navStyle = '';
 $brandLink = '/'; 
 $brandText = 'ETECast'; 
 
+
+
 if (isset($_SESSION['admin_id'])) {
     // É um ADMIN
     $navStyle = 'background-color: var(--etecast-dark);'; 
@@ -27,6 +29,7 @@ if (isset($_SESSION['admin_id'])) {
     $brandLink = (isset($_SESSION['aluno_id'])) ? '/dashboard' : '/'; 
     $brandText = 'ETECast';
 }
+
 ?>
 
 <nav class="navbar navbar-expand-lg <?php echo $navClass; ?>" style="<?php echo $navStyle; ?>">
@@ -47,6 +50,14 @@ if (isset($_SESSION['admin_id'])) {
                 <li class="nav-item">
                     <a class="nav-link active" href="/dashboard">Dashboard</a>
                 </li>
+
+                <?php if (isset($_SESSION['aluno_role']) && in_array($_SESSION['aluno_role'], ['professor', 'special'])): ?>
+                    <li class="nav-item ms-2 me-2">
+                        <a class="btn btn-sm btn-warning fw-bold text-dark" href="/creator/upload">
+                            ☁️ Upload
+                        </a>
+                    </li>
+                <?php endif; ?>
                 
                 <li class="nav-item ms-2 me-2">
                     <span class="text-white border border-light rounded px-2 py-1" style="font-size: 0.9rem; opacity: 0.9;">
@@ -63,6 +74,9 @@ if (isset($_SESSION['admin_id'])) {
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
                     <a class="nav-link" href="/admin/content">Conteúdos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/users">Usuários</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/admin/logs">Logs</a>
