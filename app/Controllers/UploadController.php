@@ -56,7 +56,8 @@ class UploadController extends Controller {
         $subDir = $tipo; 
         
         // Caminho físico (para mover)
-        $uploadPath = BASE_PATH . "/public/media/$subDir/" . $fileName;
+        // $uploadPath = BASE_PATH . "/public/media/$subDir/" . $fileName;
+        $uploadPath = "/mnt/etecast/Media/media/$subDir/" . $fileName;
         $dbPath = "$subDir/" . $fileName;
 
         if (!move_uploaded_file($arquivo_midia['tmp_name'], $uploadPath)) {
